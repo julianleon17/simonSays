@@ -3,39 +3,29 @@ const blue = document.getElementById( 'blue' );
 const violet = document.getElementById( 'violet' );
 const orange = document.getElementById( 'orange' );
 const green = document.getElementById( 'green' );
-const colorButtons = document.getElementsByClassName( 'color' );
-
 const btnStart = document.getElementById( 'btnStart' );
-
 const MAX_LEVEL = 15;
-
-/*
-
-function userInput( button ) {
-    console.log( "Color opressed by the user : " + button[ 'id' ] );
-}
-
-*/
-
 
 
 // Contains all the logic of the game
 class Game {
 
+    colors = {
+        blue: blue,
+        violet: violet,
+        orange: orange,
+        green: green,
+    };
+
+
     constructor() {
         this.nextLevel = this.nextLevel.bind( this );
+        this.userInput = this.userInput.bind( this );
 
-        this.eventsListener( "add" );
         this.initialize();
         this.generateSequence();
-        this.nextLevel();
 
-        this.colors = {
-            blue: blue,
-            violet: violet,
-            orange: orange,
-            green: green,
-        };
+        setTimeout( this.nextLevel, 1000 ); // This setTimeOut() gives the user time to start (One second)
     }
 
 
@@ -59,6 +49,7 @@ class Game {
     nextLevel() {
         this.subLevel = 0;
         this.showSequence();
+        this.eventsListener( "add" );
     }
 
 
@@ -120,6 +111,7 @@ class Game {
 
     // Turn on (Or show) the sequence color to color
     showSequence() {
+
         for ( let i=0; i < this.level; i++ ) {
             let color = this.transformNumberColor( this.sequence[i] );
 
@@ -141,29 +133,36 @@ class Game {
         this.colors[ color ].classList.remove( 'light' );
     }
 
-    eventsListener( mode ) { // the mode is if you want to put or remove events (remove)You wanna remove events, (add)You wanna add events
+    eventsListener( modeToUse ) { // the mode is if you want to put or remove events (remove)You wanna remove events, (add)You wanna add events
 
-        mode = mode.toUpperCase( mode );
+        let mode = modeToUse.toUpperCase();
+
+        // depending on the option, the type of message is chosen
+        let message = ( (mode === "ADD") ? "Added Events!" : (mode === "REMOVE") ? "Deleted Events!" : "It is not a valid option"); // Nested Ternary Operator
+
+
+        // depending on the option, the type of event is chosen
+        let event = "this.colors[ color ].event( 'click', this.userInput );";
+
+        if ( mode === "ADD" ) {
+            event = event.replace( "event", "addEventListener" );
+        }
+        if ( mode === "REMOVE" ) {
+            event = event.replace( "event", "removeEventListener" );
+        }
 
         // This loop putting an event listener on each colored button
-        if ( mode === "ADD" ) {
-            for ( let i=0; i < colorButtons.length; i++ ) {
-                colorButtons[i].addEventListener( "click", () => { this.userInput( colorButtons[i] ) } );
-            }
+        for ( let color in this.colors ) {
+            if ( mode != "ADD" && mode != "REMOVE" ) { continue; } else { eval( event ) }
         }
-
-        if ( mode === "REMOVE" ) {
-            for ( let i=0; i < colorButtons.length; i++ ) {
-                colorButtons[i].removeEventListener( "click", () => { this.userInput( colorButtons[i] ) } );
-            }
-        }
-
+        console.log( message );
     }
 
 
 
-    userInput( button ) {
-        const nameColor = button[ 'id' ]
+    userInput( ev ) {
+
+        const nameColor = ev.target.dataset.color;
 
         const numColor = this.transformNumberColor( nameColor );
 
@@ -174,25 +173,45 @@ class Game {
 
             if ( this.subLevel === this.level ) {
 
-                alert( `Great Work!\nYou have passed level ${this.level}` );
+                console.log( `Great Work!\nYou have passed level ${this.level}` );
                 this.level++;
 
                 if ( this.level === 5 ) { this.speed -= 500; } // Increase Speed
 
-                if ( this.level === MAX_LEVEL ) {
-                    // YOU WIN!!
+                if ( this.level === (MAX_LEVEL + 1) ) {
+                    this.gameWon();
                 } else {
                     setTimeout( this.nextLevel, 1000 );
                 }
             }
         } else {
-            // GAME OVER
+            this.gameOver();
+            this.initialize();
         }
-
-        console.log( `The number oprimed was : ${ numColor } - ${ nameColor } ` );
-
     }
 
+
+    gameOver() {
+        this.eventsListener( "remove" );
+
+        swal( {
+            title : "GAME OVER",
+            text : "You were wrong in the sequence :(",
+            icon : "error",
+             button : "Okay",
+        });
+    }
+
+    gameWon() {
+        swal( {
+            title : "YOU WIN",
+            text : "Congratilations!! You won the game :D",
+            icon : "success",
+             button : "Yeahh",
+        }).then( () => {
+            this.initialize();
+        });
+    }
 }
 
 
