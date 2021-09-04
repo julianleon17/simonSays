@@ -4,7 +4,6 @@ const violet = document.getElementById( 'violet' );
 const orange = document.getElementById( 'orange' );
 const green = document.getElementById( 'green' );
 const btnStart = document.getElementById( 'btnStart' );
-const MAX_LEVEL = 15;
 
 
 // Contains all the logic of the game
@@ -21,25 +20,49 @@ class Game {
     constructor() {
         this.nextLevel = this.nextLevel.bind( this );
         this.userInput = this.userInput.bind( this );
+        this.initialize = this.initialize.bind( this );
+
+        this.howManyLevels();
+
+        swal( {
+            title : "Are you ready?",
+            text : "Every five hits the speed increases, you have 10 seconds to read this",
+            icon : "info",
+            button : "Oh yeah",
+        } );
 
         this.initialize();
         this.generateSequence();
 
-        setTimeout( this.nextLevel, 1000 ); // This setTimeOut() gives the user time to start (One second)
+        setTimeout( this.nextLevel, 10000 ); // This setTimeOut() gives the user time to start (One second)
+    }
+
+    howManyLevels() {
+        this.MAX_LEVEL = parseInt( prompt( 'How many levels do you want?' ) );
     }
 
 
-    // hide the "start" button
+    // initialize speed and levels
     initialize() {
-        btnStart.classList.add( 'hide' );
+        this.hideClass( btnStart );
         this.level = 1;
         this.speed = 1000;
     }
 
+    // hide the "start" button
+    hideClass( btnStart ) {
+        if ( btnStart.classList.contains( 'hide' ) ) {
+            btnStart.classList.remove( 'hide' );
+            console.log( 'Si hay' );
+        } else {
+            btnStart.classList.add( 'hide' );
+            console.log( 'No hay' );
+        }
+    }
 
     // Create the sequence
     generateSequence() {
-        this.sequence = new Array( MAX_LEVEL ).fill( 0 ).map( ( i ) => {
+        this.sequence = new Array( this.MAX_LEVEL ).fill( 0 ).map( ( i ) => {
             return( Math.floor( Math.random() * 4 ) );
         });
     }
@@ -104,8 +127,6 @@ class Game {
                     console.log( "Is not a valid string!" );
             }
         }
-
-
     }
 
 
@@ -178,7 +199,7 @@ class Game {
 
                 if ( this.level === 5 ) { this.speed -= 500; } // Increase Speed
 
-                if ( this.level === (MAX_LEVEL + 1) ) {
+                if ( this.level === (this.MAX_LEVEL + 1) ) {
                     this.gameWon();
                 } else {
                     setTimeout( this.nextLevel, 1000 );
@@ -209,6 +230,7 @@ class Game {
             icon : "success",
              button : "Yeahh",
         }).then( () => {
+            this.eventsListener( "remove" );
             this.initialize();
         });
     }
